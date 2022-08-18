@@ -49,24 +49,9 @@ func main() {
 	}
 
 	EventsRrepo := handlers.NewEventsHand(db)
-	//BagRepo := handlers.BagHandlers{}
-	//ProductRepo := handlers.NewProductHand(db)
 	userRepo := handlers.NewUserHand(db)
 	TitlesRepo := handlers.NewTitlesHand(db)
 	TaskRepo := handlers.NewTaskHandler(db)
-	//OrdersRepo := handlers.NewOrdersHand(db)
-	////SearchPageRepo := handlers.NewSearchPageHand(db)
-	//
-	//r.HandleFunc("/api/putInBag/{PRODUCT_ID}/{NUM_PRODUCT}", BagRepo.AddToBag).Methods("POST")
-	//
-	//r.HandleFunc("/api/order", OrdersRepo.GetOrder).Methods("GET")                  // get all orders
-	//r.HandleFunc("/api/order", OrdersRepo.NewOrder).Methods("POST")                 // creat new order
-	//r.HandleFunc("/api/order", OrdersRepo.ChangeOrderStatus).Methods("PUT")         // change order-status
-	//r.HandleFunc("/api/order/{ORDER_ID}", OrdersRepo.DeleteOrder).Methods("DELETE") // delete order
-	//r.HandleFunc("/api/orders", OrdersRepo.GetOrders).Methods("POST")               // get some orders
-	//
-	//r.HandleFunc("/api/giveProductUrl/{PRODUCT_ID}", ProductRepo.GetProduct).Methods("POST")
-	//
 
 	r.HandleFunc("/api/login", userRepo.Login).Methods("POST")
 	r.HandleFunc("/api/signUp", userRepo.SingUp).Methods("POST")
@@ -89,17 +74,7 @@ func main() {
 	spa := handlers.SpaHandler{StaticPath: ".././static/dist", IndexPath: "index.html"}
 	r.PathPrefix("/").Handler(spa)
 
-	//fs := http.FileServer(http.Dir(".././static/dist"))
-	//http.Handle("/", fs)
-
-	//handler := middleware.Auth(r)
 	handler := middleware.Auth(r)
-	//handler = middleware.AccessLog(logger, r)
-
-	// put words to db - wordToId - for test
-	//items.PutWords(db)
-	//items.PrintWords(db)
-	//items.GetOneWord("legwyldebf", db)
 
 	port := "8085"
 	fmt.Println("start serv on port " + port)

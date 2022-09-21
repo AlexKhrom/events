@@ -5,11 +5,17 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type TasksRepoInterface interface {
 	NewTask(task *Task) bool
 	GetTasks(userId int) ([]Task, bool)
+	GetTasksPiece(taskId, userId int) ([]TaskPiece, bool) //  return (tasksPiece , ok)
+	ChangeTask(task *TaskForm, userId int) error
+	MakeTaskPiece(task *TaskForm, userId int) bool
+	DeleteTask(taskID, userId int) error
+	DeleteTaskPiece(taskPieceID, userId int) error
 }
 
 type TaskRepo struct {
@@ -28,8 +34,21 @@ type Task struct {
 	Num       float64 `json:"num"`    //колчиство выполненной части таска
 }
 
+type TaskForm struct {
+	Id        int     `json:"id"`
+	UserId    int     `json:"userID"`
+	Title     string  `json:"title"`
+	TimeStart int     `json:"timeStart"`
+	TimeEnd   int     `json:"timeEnd"`
+	Type      string  `json:"type"`
+	Target    float64 `json:"target"` //цель таска
+	Num       float64 `json:"num"`    //колчиство выполненной части таска
+	DeltaNum  float64 `json:"deltaNum"`
+}
+
 type TaskPiece struct {
 	Id     int     `json:"id"`
+	UserId int     `json:"userId"`
 	TaskId int     `json:"taskId"`
 	DT     int     `json:"dt"`
 	Type   string  `json:"type"`
@@ -61,20 +80,20 @@ func (r *TaskRepo) NewTask(task *Task) bool {
 
 	affected, err := result.RowsAffected()
 	if err != nil {
-		fmt.Println("err new event sql2 = ", err)
+		fmt.Println("err new task sql2 = ", err)
 		return false
 
 	}
 
 	lastID, err := result.LastInsertId()
 	if err != nil {
-		fmt.Println("err new event sql3 = ", err)
+		fmt.Println("err new task sql3 = ", err)
 		return false
 	}
 
 	fmt.Println("Insert - RowsAffected", affected, "LastInsertId: ", lastID)
 
-	return false
+	return true
 }
 
 func (r *TaskRepo) GetTasks(userId int) ([]Task, bool) {
@@ -103,12 +122,79 @@ func (r *TaskRepo) GetTasks(userId int) ([]Task, bool) {
 	return tasks, false
 }
 
-func (r *TaskRepo) ChangeTask(task Task, userId int) error {
+func (r *TaskRepo) GetTasksPiece(taskId, userId int) ([]TaskPiece, bool) {
+	rows, err := r.DB.Query("SELECT * FROM taskPiece WHERE task_id =" + strconv.Itoa(taskId) + " AND user_id=" + strconv.Itoa(userId))
+	if err != nil {
+		fmt.Println("get tasks error = ", err)
+		return nil, false
+	}
 
+	var tasksPieces []TaskPiece
+	var i = 0
+
+	for rows.Next() {
+
+		var task = TaskPiece{}
+		err = rows.Scan(&task.Id, &task.UserId, &task.TaskId, &task.DT, &task.Type, &task.Num)
+		if err != nil {
+			fmt.Println("get tasksPiece error = ", err)
+			return nil, false
+		}
+		tasksPieces = append(tasksPieces, task)
+		i++
+	}
+	// надо закрывать соединение, иначе будет течь
+	rows.Close()
+	return tasksPieces, true
 }
 
-func (r *TaskRepo) MakeTaskPiece(taskPiece TaskPiece) bool {
+func (r *TaskRepo) ChangeTask(task *TaskForm, userId int) error {
+	fmt.Println("hi change task !!!")
 
+	_, err := r.DB.Query("UPDATE tasks SET " + " time_start = " +
+		strconv.Itoa(task.TimeStart) + ", time_end = " + strconv.Itoa(task.TimeEnd) + ", num = " + fmt.Sprintf("%f", task.Num) +
+		" WHERE user_id = " + strconv.Itoa(userId) + " AND id = " + strconv.Itoa(task.Id))
+	return err
 }
 
+func (r *TaskRepo) MakeTaskPiece(task *TaskForm, userId int) bool {
+	result, err := r.DB.Exec(
+		"INSERT INTO taskPiece (`user_id`,`task_id`,`dt`,`type`,`num`) VALUES (?,?,?,?,?)",
+		userId,
+		task.Id,
+		time.Now().Unix(),
+		task.Type,
+		task.DeltaNum,
+	)
+	if err != nil {
+		fmt.Println("err new taskPiece sql1 = ", err)
+		return false
+	}
 
+	affected, err := result.RowsAffected()
+	if err != nil {
+		fmt.Println("err new taskPiece sql2 = ", err)
+		return false
+
+	}
+
+	lastID, err := result.LastInsertId()
+	if err != nil {
+		fmt.Println("err new taskPiece sql3 = ", err)
+		return false
+	}
+
+	fmt.Println("Insert - RowsAffected", affected, "LastInsertId: ", lastID)
+
+	return true
+}
+
+func (r *TaskRepo) DeleteTask(taskID, userId int) error {
+	_, err := r.DB.Query("DELETE FROM tasks WHERE user_id = " + strconv.Itoa(userId) + " AND id = " + strconv.Itoa(taskID))
+	return err
+}
+
+func (r *TaskRepo) DeleteTaskPiece(taskPieceID, userId int) error {
+	_, err := r.DB.Query("DELETE FROM taskPiece WHERE user_id = " + strconv.Itoa(userId) + " AND id = " + strconv.Itoa(taskPieceID))
+	return err
+}

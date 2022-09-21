@@ -48,12 +48,12 @@
                   <v-row>
                     <div style="display: flex;justify-content: space-between;padding:5px;color: #777777;width: 100%">
                       <div>
-                        <div class="text-h5">
+                        <div class="text-h5" style="max-width: 200px;word-wrap: break-word;">
                           {{ $store.state.tasks[findIndexTasks(chosenTaskId)].title }}
                         </div>
 
                       </div>
-                      <div>
+                      <div style="white-space: nowrap;">
                         {{ calcProgress(chosenTaskId) }}
                       </div>
                     </div>
@@ -129,6 +129,7 @@ export default {
       isAddNum: false,
       isTaskInfo: false,
       chosenTaskId: -1,
+      taskPieces: [],
     }
   },
   methods: {
@@ -147,26 +148,57 @@ export default {
       localStorage.setItem('tasks', JSON.stringify(this.$store.state.tasks))
       console.log(this.$store.state.tasks)
     },
+
     openChangeTask(taskId) {
       this.isAddNum = true
       this.chosenTaskId = taskId
+      this.getTaskPieces()
       console.log('hi')
     },
-    changeTask() {
+    async getTaskPieces(){
+      let response = await this.$store.state.makeReq("api/getTaskPieces", "POST", JSON.stringify({id:this.chosenTaskId}))
+      let tasksPieces = await response.json()
+      console.log('tasls = ', tasksPieces)
+      if (tasksPieces === null) {
+        tasksPieces = []
+      }
+
+      this.taskPieces = tasksPieces
+      console.log("pieces = ", tasksPieces)
+
+    },
+    async changeTask() {
       let index = this.findIndexTasks(this.chosenTaskId)
       let task = this.$store.state.tasks[index]
+      let num = 0
+      let deltaNum = 0
       console.log({task})
       if (parseInt(this.taskNum) > 0 || parseInt(this.taskHours) >= 0 && parseInt(this.taskMinutes) >= 0) {
         if (task.type === 'time') {
           console.log("hi there")
           console.log('calc = ', parseInt(this.$store.state.tasks[index].num) + parseInt((parseInt(this.taskHours) * 60 + parseInt(this.taskMinutes)) * 60))
-          this.$store.state.tasks[index].num = parseInt(this.$store.state.tasks[index].num) + parseInt((parseInt(this.taskHours) * 60 + parseInt(this.taskMinutes)) * 60)
+          num = parseInt(this.$store.state.tasks[index].num) + parseInt((parseInt(this.taskHours) * 60 + parseInt(this.taskMinutes)) * 60)
+          deltaNum = parseInt((parseInt(this.taskHours) * 60 + parseInt(this.taskMinutes)) * 60)
         } else {
-          this.$store.state.tasks[index].num = parseInt(this.$store.state.tasks[index].num) + parseInt(this.taskNum)
+          num = parseInt(this.$store.state.tasks[index].num) + parseInt(this.taskNum)
+          deltaNum = parseInt(this.taskNum)
         }
+        this.$store.state.tasks[index].num = num
       }
       localStorage.setItem('tasks', JSON.stringify(this.$store.state.tasks))
       console.log(task)
+      let newTask = {
+        id: task.id,
+        title: task.title,
+        timeStart: task.timeStart,
+        timeEnd: task.timeEnd,
+        type: task.type,
+        target: task.target,
+        num: num,
+        deltaNum: deltaNum,
+      }
+      let response = await this.$store.state.makeReq('api/changeTask', 'PUT', JSON.stringify(newTask))
+      console.log(response)
       this.isAddNum = false
       this.taskHours = 0
       this.taskMinutes = 0
@@ -191,7 +223,7 @@ export default {
         if (--waitSeconds < 0) {
           clearInterval(intervalId);
           let index = this.findIndexTasks(id)
-          this.deleteEventFromBD(id)
+          this.$store.state.makeReq("api/deleteTask", "DELETE", JSON.stringify({id: id}))
           this.$store.state.tasks.splice(index, 1)
         } else {
           task.waitSeconds = waitSeconds
@@ -222,7 +254,7 @@ export default {
     calcProgress(taskId) {
       let task = this.$store.state.tasks[this.findIndexTasks(taskId)]
       if (task.type === 'time') {
-        return this.makeMinutesAndHoursStr(parseInt(parseInt(task.num) / 3600), parseInt(task.num) % 3600 / 60) + "/" + this.makeMinutesAndHoursStr(parseInt(parseInt(task.target) / 3600), parseInt(task.target) % 3600 / 60)
+        return this.makeMinutesAndHoursStr(parseInt(parseInt(task.num) / 3600), parseInt(task.num) % 3600 / 60) + " / " + this.makeMinutesAndHoursStr(parseInt(parseInt(task.target) / 3600), parseInt(task.target) % 3600 / 60)
       } else {
         return task.num + ' / ' + task.target
       }

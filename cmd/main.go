@@ -27,7 +27,7 @@ func main() {
 
 	r := mux.NewRouter()
 
-	//bdPort:="8889"
+	//dbPort:="8889"
 	dsn := "test:root@tcp(localhost:3306)/events?"
 	// указываем кодировку
 	dsn += "&charset=utf8mb4"
@@ -68,15 +68,18 @@ func main() {
 
 	r.HandleFunc("/api/newTask", TaskRepo.AddTask).Methods("POST")
 	r.HandleFunc("/api/getTasks", TaskRepo.GetTasks).Methods("GET")
-	r.HandleFunc("/api/changeTask", EventsRrepo.ChangeEvent).Methods("PUT")
-	r.HandleFunc("/api/deleteTask", TitlesRepo.DeleteTitle).Methods("DELETE")
+	r.HandleFunc("/api/changeTask", TaskRepo.ChangeTask).Methods("PUT")
+	r.HandleFunc("/api/deleteTask", TaskRepo.DeleteTask).Methods("DELETE")
+
+	r.HandleFunc("/api/getTaskPieces", TaskRepo.GetTasksPiece).Methods("POST") // post - becuase get have no body
+	r.HandleFunc("/api/deleteTaskPiece", TaskRepo.DeleteTaskPiece).Methods("DELETE")
 
 	spa := handlers.SpaHandler{StaticPath: ".././static/dist", IndexPath: "index.html"}
 	r.PathPrefix("/").Handler(spa)
 
 	handler := middleware.Auth(r)
 
-	port := "8085"
+	port := "8080"
 	fmt.Println("start serv on port " + port)
 	err = http.ListenAndServe(":"+port, handler)
 	if err != nil {

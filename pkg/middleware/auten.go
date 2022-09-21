@@ -29,12 +29,13 @@ func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//next.ServeHTTP(w, r)
 
-		fmt.Println("\n\n\nauth middleware")
-		fmt.Println("time = ", time.Now().String()[:27])
-		fmt.Println("r.Method = ", r.Method)
-		fmt.Println("vers method = ", r.Proto)
-		fmt.Println("url = ", r.URL.Path)
-
+		fmt.Println("\n\n\n=====================")
+		fmt.Println("time: ", time.Now().String()[:27])
+		fmt.Println("r.Method: ", r.Method)
+		//fmt.Println("vers method = ", r.Proto)
+		fmt.Println("url: ", r.URL.Path)
+		fmt.Println("\n=====================")
+		
 		rMethod, ok := noAuthUrls[r.URL.Path]
 
 		if (strings.Contains(r.URL.Path, "/login") && r.Method == "GET") ||

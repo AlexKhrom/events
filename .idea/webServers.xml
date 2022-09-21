@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="ab6e25d8-db87-407a-9568-0a0fc9f9dc65" name="events">
+        <fileTransfer rootFolder="/usr/local/go/src" accessType="SFTP" host="195.133.49.232" port="22" sshConfigId="2f5ab459-b96b-4889-974a-9a1d8e078c9b" sshConfig="root@195.133.49.232">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

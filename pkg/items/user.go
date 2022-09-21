@@ -115,25 +115,19 @@ func (repo *UserRepo) SetRefreshToken(token string, exp int64, email string) boo
 
 func (repo *UserRepo) FindUser(userEmail string) bool { // все кончено нужно делаит через id а не user-login
 
-	rows, err := repo.DB.Query("SELECT email FROM users WHERE `users`.`email`='" + Ecran(userEmail) + "';")
+	rows := repo.DB.QueryRow("SELECT email FROM users WHERE `users`.`email`=?", userEmail)
+
+	var email string
+	err := rows.Scan(&email)
 	if err != nil {
 		fmt.Println("find user error = ", err)
 		return false
 	}
-	for rows.Next() {
-		var email string
-		err = rows.Scan(&email)
-		if err != nil {
-			fmt.Println("find user error = ", err)
-			return false
-		}
 
-		if email == userEmail {
-			return true
-		}
+	if email == userEmail {
+		return true
 	}
-	// надо закрывать соединение, иначе будет течь
-	rows.Close()
+
 	return false
 
 }

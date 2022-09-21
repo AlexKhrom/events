@@ -1,18 +1,20 @@
 <template>
   <div style="height: 100%;">
-    <div style="display:inline-block;margin: auto;width:100%">
-      <v-container>
-        <v-layout row wrap align-center>
-          <v-flex v-for="(title,index) in $store.state.titles" :key="title.title" style="margin: 15px 5px 5px 5px;">
-            <v-btn @touchstart="deleteTitleDown('touch')" @mousedown="deleteTitleDown('click')"
-                   @touchend="deleteTitleUp(title,index,'touch')" @mouseup="deleteTitleUp(title,index,'click')"
-                   style="display:block;margin: auto;min-width: 140px;height: 100px;">
-              {{ title.title }}
-            </v-btn>
-          </v-flex>
-        </v-layout>
-      </v-container>
+<!--    <div style="display:inline-block;margin: auto;width:100%">-->
+<!--      <v-container>-->
+<!--        <v-layout row wrap align-center>-->
+    <div style="display: grid;grid-template-columns: repeat(2, 1fr);gap: 20px">
+      <div v-for="(title,index) in $store.state.titles" :key="title.title">
+        <v-btn @touchstart="deleteTitleDown('touch')" @mousedown="deleteTitleDown('click')"
+               @touchend="deleteTitleUp(title,index,'touch')" @mouseup="deleteTitleUp(title,index,'click')"
+               style="height: 100px;width: 100%">
+          {{ title.title }}
+        </v-btn>
+      </div>
     </div>
+<!--        </v-layout>-->
+<!--      </v-container>-->
+<!--    </div>-->
     <div style="margin-top:20px;display: flex;justify-content: center;text-align: center">
       <v-text-field
           style="margin:20px 20px 20px 0"
